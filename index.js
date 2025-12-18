@@ -3,11 +3,14 @@ const app=express();
 const mongoose=require("mongoose");
 const path=require("path");
 const Chat=require("./models/chat.js")
+const methodOverride = require("method-override");
+
 app.set("views",path.join(__dirname,"views"));
 app.set("view engine","ejs");
 app.use(express.static(path.join(__dirname,"public")))
 
 app.use(express.urlencoded({extended:true}))
+app.use(methodOverride("_method"));
 mongoose.connect("mongodb://127.0.0.1:27017/whatsapp")
   .then(() => {
     console.log("MongoDB connected");
@@ -51,6 +54,29 @@ newChat.save().then((res)=>{
 });
 res.redirect("/chats");
 })
+app.get("/chats/:id/edit",async (req,res)=>{
+    let {id}=req.params;
+    let chat= await Chat.findById(id);
+    res.render("edit.ejs",{chat})
+
+})
+//update
+app.put("/chats/:id", async(req,res)=>{
+    let {id}=req.params;
+    let {newMsg}=req.body;
+
+    let updateChat= await Chat.findByIdAndUpdate(id,{msg:newMsg},{runValidators:true},{new:true});
+    console.log(updateChat)
+    res.redirect("/chats");
+});
+app.delete("/chats/:id",async (req,res)=>{
+let {id}=req.params;
+
+let deletechat=await Chat.findByIdAndDelete(id);
+console.log(deletechat);
+res.redirect("/chats")
+})
+
 app.listen(9003,()=>{
     console.log("serrver is listen");
 })
